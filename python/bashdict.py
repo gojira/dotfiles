@@ -1,6 +1,7 @@
 """
 Reads environment variables from a bash script file and returns them as a dictionary
 """
+import os
 
 def bash_to_dict(bash_script):
     """
@@ -10,7 +11,8 @@ def bash_to_dict(bash_script):
     """
     config = {}
     unset = []
-    with open(bash_script, "r") as bash_file:
+    expanded = os.path.expanduser(bash_script)
+    with open(expanded, "r") as bash_file:
         for line in bash_file:
             line = line.strip()
             if line.startswith("#"):
@@ -25,4 +27,3 @@ def bash_to_dict(bash_script):
                 unset.append(key)
     config['unset'] = unset
     return config
-    
