@@ -29,20 +29,22 @@ is to unset the environment variable first.
 
 """
 
-def update_openai_kwargs_from_config(kwargs, config):
-    """Updates kwargs with values from config"""
+def openai_params_from_config(params, config):
+    """Initialize or update dictioary of OpenAI settings with values from config"""
+    config_mapping = {
+        'OPENAI_API_KEY': 'api_key',
+        'OPENAI_API_BASE': 'api_base',
+        'OPENAI_API_TYPE': 'api_type',
+        'OPENAI_API_VERSION': 'api_version',
+        'OPENAI_ORGANIZATION': 'organization',
+    }
+    if not params:
+        params = { }
     if config:
-        if 'OPENAI_API_KEY' in config:
-            kwargs['api_key'] = config['OPENAI_API_KEY']
-        if 'OPENAI_API_BASE' in config:
-            kwargs['api_base'] = config['OPENAI_API_BASE']
-        if 'OPENAI_API_TYPE' in config:
-            kwargs['api_type'] = config['OPENAI_API_TYPE']
-        if 'OPENAI_API_VERSION' in config:
-            kwargs['api_version'] = config['OPENAI_API_VERSION']
-        if 'OPENAI_ORGANIZATION' in config:
-            kwargs['organization'] = config['OPENAI_ORGANIZATION']
-    return kwargs
+        for config_key, param_key in config_mapping.items():
+            if config_key in config:
+                params[param_key] = config[config_key]
+    return params
 
 
 def get_completion_cli(prompt, config=None, **kwargs):
@@ -50,7 +52,7 @@ def get_completion_cli(prompt, config=None, **kwargs):
     Get completion from OpenAI API
 
     """
-    kwargs = update_openai_kwargs_from_config(kwargs, config)
+    kwargs = openai_params_from_config(kwargs, config)
     if 'debug' in kwargs:
         del kwargs['debug']
         print(kwargs)
@@ -68,7 +70,7 @@ def get_embedding_cli(input, config=None, **kwargs):
     Get embedding from OpenAI API
 
     """
-    kwargs = update_openai_kwargs_from_config(kwargs, config)
+    kwargs = openai_params_from_config(kwargs, config)
     if 'debug' in kwargs:
         del kwargs['debug']
         print(kwargs)
