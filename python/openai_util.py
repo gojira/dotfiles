@@ -1,6 +1,7 @@
 import os
 import openai
 import json
+import bashdict
 
 """
 A config is a dictionary of environment variables that will be set before the API call.
@@ -29,8 +30,24 @@ is to unset the environment variable first.
 
 """
 
-def openai_params_from_config(params, config):
-    """Initialize or update dictioary of OpenAI settings with values from config"""
+def get_openai_env():
+    """Scan os.environ for OpenAI environment variables"""
+    config = {}
+    for x in os.environ:
+        if x.startswith('OPENAI_'):
+            config[x] = os.environ[x]
+    return config
+
+
+def clean_openai_env():
+    """Unset OpenAI environment variables"""
+    config = get_openai_env()
+    for x in config:
+        del os.environ[x]
+
+
+def openai_config_from_bash(bash_script):
+    """"""
     config_mapping = {
         'OPENAI_API_KEY': 'api_key',
         'OPENAI_API_BASE': 'api_base',
@@ -38,28 +55,29 @@ def openai_params_from_config(params, config):
         'OPENAI_API_VERSION': 'api_version',
         'OPENAI_ORGANIZATION': 'organization',
     }
-    if not params:
-        params = { }
-    if config:
-        for config_key, param_key in config_mapping.items():
-            if config_key in config:
-                params[param_key] = config[config_key]
+    envs = bashdict.bash_to_dict(bash_script)
+    params = { }
+    for config_key, param_key in config_mapping.items():
+        if config_key in envs:
+            params[param_key] = envs[config_key]
     return params
 
 
 def get_completion_cli(prompt, config=None, **kwargs):
     """
     Get completion from OpenAI API
-
     """
-    kwargs = openai_params_from_config(kwargs, config)
-    if 'debug' in kwargs:
-        del kwargs['debug']
-        print(kwargs)
+    if config:
+        config.update(kwargs)
+    else:
+        config = kwargs
+    if 'debug' in config:
+        del config['debug']
+        print(config)
 
     response = openai.Completion.create(
         prompt=prompt,
-        **kwargs
+        **config
     )
     completion = response['choices'][0]['text']
     return completion
@@ -68,16 +86,18 @@ def get_completion_cli(prompt, config=None, **kwargs):
 def get_embedding_cli(input, config=None, **kwargs):
     """
     Get embedding from OpenAI API
-
     """
-    kwargs = openai_params_from_config(kwargs, config)
-    if 'debug' in kwargs:
-        del kwargs['debug']
-        print(kwargs)
+    if config:
+        config.update(kwargs)
+    else:
+        config = kwargs
+    if 'debug' in config:
+        del config['debug']
+        print(config)
 
     response = openai.Embedding.create(
         input=input,
-        **kwargs
+        **config
     )
     embedding = response['data'][0]['embedding']
     return embedding
